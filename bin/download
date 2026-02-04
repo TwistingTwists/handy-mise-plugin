@@ -4,15 +4,31 @@ set -euo pipefail
 version="${ASDF_INSTALL_VERSION}"
 download_dir="${ASDF_DOWNLOAD_PATH}"
 
+os="$(uname -s)"
 arch="$(uname -m)"
-case "$arch" in
-  x86_64)  deb_arch="amd64" ;;
-  aarch64) deb_arch="arm64" ;;
-  *) echo "Unsupported architecture: $arch" >&2; exit 1 ;;
+
+case "${os}" in
+  Linux)
+    case "${arch}" in
+      x86_64)  asset="Handy_${version}_amd64.deb" ;;
+      aarch64) asset="Handy_${version}_arm64.deb" ;;
+      *) echo "Unsupported Linux arch: ${arch}" >&2; exit 1 ;;
+    esac
+    ;;
+  Darwin)
+    case "${arch}" in
+      x86_64)  asset="Handy_x64.app.tar.gz" ;;
+      arm64)   asset="Handy_aarch64.app.tar.gz" ;;
+      *) echo "Unsupported macOS arch: ${arch}" >&2; exit 1 ;;
+    esac
+    ;;
+  *)
+    echo "Unsupported OS: ${os}" >&2; exit 1 ;;
 esac
 
-url="https://github.com/cjpais/Handy/releases/download/v${version}/Handy_${version}_${deb_arch}.deb"
+url="https://github.com/cjpais/Handy/releases/download/v${version}/${asset}"
 
 mkdir -p "$download_dir"
-echo "Downloading Handy v${version} (${deb_arch})..."
-curl -fSL -o "${download_dir}/handy.deb" "$url"
+echo "Downloading Handy v${version} (${os} ${arch})..."
+curl -fSL -o "${download_dir}/${asset}" "$url"
+echo "${asset}" > "${download_dir}/.asset_name"

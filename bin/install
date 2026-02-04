@@ -5,27 +5,42 @@ version="${ASDF_INSTALL_VERSION}"
 install_dir="${ASDF_INSTALL_PATH}"
 download_dir="${ASDF_DOWNLOAD_PATH}"
 
-deb_file="${download_dir}/handy.deb"
-if [[ ! -f "$deb_file" ]]; then
-  echo "Error: ${deb_file} not found. Run download first." >&2
+asset="$(cat "${download_dir}/.asset_name")"
+file="${download_dir}/${asset}"
+
+if [[ ! -f "$file" ]]; then
+  echo "Error: ${file} not found. Run download first." >&2
   exit 1
 fi
 
-mkdir -p "$install_dir"
-dpkg-deb -x "$deb_file" "$install_dir"
-
 mkdir -p "${install_dir}/bin"
 
-handy_bin=$(find "$install_dir" -name "handy" -o -name "Handy" | head -1)
-if [[ -z "$handy_bin" ]]; then
-  echo "Error: could not find handy binary in extracted deb" >&2
+case "${asset}" in
+  *.deb)
+    dpkg-deb -x "$file" "$install_dir"
+    handy_bin=$(find "$install_dir" -type f \( -name "handy" -o -name "Handy" \) ! -path "*/bin/handy" | head -1)
+    if [[ -n "$handy_bin" ]]; then
+      ln -sf "$handy_bin" "${install_dir}/bin/handy"
+      chmod +x "$handy_bin"
+    fi
+    ;;
+  *.app.tar.gz)
+    tar xzf "$file" -C "$install_dir"
+    handy_bin=$(find "$install_dir" -type f -name "Handy" -path "*/MacOS/*" | head -1)
+    if [[ -n "$handy_bin" ]]; then
+      ln -sf "$handy_bin" "${install_dir}/bin/handy"
+      chmod +x "$handy_bin"
+    fi
+    ;;
+  *)
+    echo "Error: unknown asset format: ${asset}" >&2; exit 1 ;;
+esac
+
+if [[ ! -e "${install_dir}/bin/handy" ]]; then
+  echo "Error: could not find handy binary after extraction" >&2
   find "$install_dir" -type f >&2
   exit 1
 fi
 
-if [[ "$handy_bin" != "${install_dir}/bin/handy" ]]; then
-  ln -sf "$handy_bin" "${install_dir}/bin/handy"
-fi
-chmod +x "$handy_bin" "${install_dir}/bin/handy"
-
+chmod +x "${install_dir}/bin/handy"
 echo "Handy v${version} installed to ${install_dir}"

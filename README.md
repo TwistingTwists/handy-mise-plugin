@@ -26,5 +26,7 @@ mise ls-remote handy
 
 ## Supported platforms
 
-- Linux x86_64 (amd64)
-- Linux aarch64 (arm64)
+- Linux x86_64 — `.deb`
+- Linux aarch64 — `.deb`
+- macOS x64 (Intel) — `.app.tar.gz`
+- macOS arm64 (Apple Silicon) — `.app.tar.gz`
