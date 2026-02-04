@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+version="${ASDF_INSTALL_VERSION}"
+download_dir="${ASDF_DOWNLOAD_PATH}"
+
+arch="$(uname -m)"
+case "$arch" in
+  x86_64)  deb_arch="amd64" ;;
+  aarch64) deb_arch="arm64" ;;
+  *) echo "Unsupported architecture: $arch" >&2; exit 1 ;;
+esac
+
+url="https://github.com/cjpais/Handy/releases/download/v${version}/Handy_${version}_${deb_arch}.deb"
+
+mkdir -p "$download_dir"
+echo "Downloading Handy v${version} (${deb_arch})..."
+curl -fSL -o "${download_dir}/handy.deb" "$url"

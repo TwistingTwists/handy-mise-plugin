@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+curl -s "https://api.github.com/repos/cjpais/Handy/releases" \
+  | grep -oP '"tag_name":\s*"v\K[^"]+' \
+  | tr '\n' ' '

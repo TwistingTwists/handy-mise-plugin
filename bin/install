@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+version="${ASDF_INSTALL_VERSION}"
+install_dir="${ASDF_INSTALL_PATH}"
+download_dir="${ASDF_DOWNLOAD_PATH}"
+
+deb_file="${download_dir}/handy.deb"
+if [[ ! -f "$deb_file" ]]; then
+  echo "Error: ${deb_file} not found. Run download first." >&2
+  exit 1
+fi
+
+mkdir -p "$install_dir"
+dpkg-deb -x "$deb_file" "$install_dir"
+
+mkdir -p "${install_dir}/bin"
+
+handy_bin=$(find "$install_dir" -name "handy" -o -name "Handy" | head -1)
+if [[ -z "$handy_bin" ]]; then
+  echo "Error: could not find handy binary in extracted deb" >&2
+  find "$install_dir" -type f >&2
+  exit 1
+fi
+
+if [[ "$handy_bin" != "${install_dir}/bin/handy" ]]; then
+  ln -sf "$handy_bin" "${install_dir}/bin/handy"
+fi
+chmod +x "$handy_bin" "${install_dir}/bin/handy"
+
+echo "Handy v${version} installed to ${install_dir}"
