@@ -18,10 +18,10 @@ mkdir -p "${install_dir}/bin"
 case "${asset}" in
   *.deb)
     dpkg-deb -x "$file" "$install_dir"
-    handy_bin=$(find "$install_dir" -type f \( -name "handy" -o -name "Handy" \) ! -path "*/bin/handy" | head -1)
-    if [[ -n "$handy_bin" ]]; then
-      ln -sf "$handy_bin" "${install_dir}/bin/handy"
-      chmod +x "$handy_bin"
+    if [[ -f "${install_dir}/usr/bin/handy" ]]; then
+      ln -sf "${install_dir}/usr/bin/handy" "${install_dir}/bin/handy"
+    elif [[ -f "${install_dir}/usr/bin/Handy" ]]; then
+      ln -sf "${install_dir}/usr/bin/Handy" "${install_dir}/bin/handy"
     fi
     ;;
   *.app.tar.gz)
@@ -43,4 +43,19 @@ if [[ ! -e "${install_dir}/bin/handy" ]]; then
 fi
 
 chmod +x "${install_dir}/bin/handy"
+
+desktop_src=$(find "$install_dir" -name "*.desktop" -path "*/applications/*" | head -1)
+if [[ -n "$desktop_src" ]]; then
+  desktop_dir="${HOME}/.local/share/applications"
+  mkdir -p "$desktop_dir"
+  handy_real=$(readlink -f "${install_dir}/bin/handy")
+  cp "$desktop_src" "${desktop_dir}/handy.desktop"
+  sed -i "s|^Exec=.*|Exec=${handy_real}|" "${desktop_dir}/handy.desktop"
+  icon_src=$(find "$install_dir" -name "handy.png" -path "*/128x128/*" | head -1)
+  if [[ -n "$icon_src" ]]; then
+    sed -i "s|^Icon=.*|Icon=${icon_src}|" "${desktop_dir}/handy.desktop"
+  fi
+  echo "Desktop entry installed to ${desktop_dir}/handy.desktop"
+fi
+
 echo "Handy v${version} installed to ${install_dir}"
